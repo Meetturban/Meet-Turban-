@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ProfilePage from './pages/ProfilePage';
+import TermsPage from './pages/TermsPage';
 
 // Stage 2, 3 & 4 Portals
 import ManagerLayout from './layouts/ManagerLayout';
@@ -49,6 +50,7 @@ function App() {
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/book" element={<BookingPage />} />
                     <Route path="/track" element={<TrackingPage />} />
+                    <Route path="/terms" element={<TermsPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<Navigate to="/login" replace />} />
                     <Route path="/forgot-password" element={<Navigate to="/login" replace />} />

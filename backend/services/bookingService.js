@@ -273,12 +273,25 @@ const saveLocalBookings = (bookings) => {
 };
 
 
-// Tracking ID Generator (Format: SAFA-YYYY-XXXXXX)
+// Tracking ID Generator (Format: MEET-YYYY-XXXXXX with Random Unique 6-Digit Code)
 export const generateTrackingId = () => {
   const year = new Date().getFullYear();
   const bookings = getLocalBookings();
-  const sequenceNumber = (bookings.length + 1).toString().padStart(6, '0');
-  return `SAFA-${year}-${sequenceNumber}`;
+  const existingIds = new Set(bookings.map(b => (b.tracking_id || '').toUpperCase()));
+
+  let candidateId = '';
+  let attempts = 0;
+
+  while (attempts < 1000) {
+    attempts++;
+    const randomDigits = Math.floor(100000 + Math.random() * 900000).toString();
+    candidateId = `MEET-${year}-${randomDigits}`;
+    if (!existingIds.has(candidateId)) {
+      return candidateId;
+    }
+  }
+
+  return `MEET-${year}-${Math.floor(100000 + Math.random() * 900000)}`;
 };
 
 // MICRO TASK 4.6 NOTIFICATIONS API

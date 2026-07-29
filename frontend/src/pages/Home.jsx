@@ -188,10 +188,10 @@ const Home = () => {
       </section>
 
       {/* WHY CHOOSE US */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 apple-fade-in">
         <div className="glass-panel p-10 rounded-3xl border border-amber-500/20 grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          <div className="space-y-3 text-center md:text-left">
+          <div className="space-y-3 text-center md:text-left apple-card-hover p-4 rounded-2xl">
             <div className="w-12 h-12 rounded-2xl gold-gradient-bg flex items-center justify-center mx-auto md:mx-0 shadow-lg shadow-amber-500/20">
               <Award className="w-6 h-6 text-slate-950" />
             </div>
@@ -201,7 +201,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="space-y-3 text-center md:text-left">
+          <div className="space-y-3 text-center md:text-left apple-card-hover p-4 rounded-2xl">
             <div className="w-12 h-12 rounded-2xl gold-gradient-bg flex items-center justify-center mx-auto md:mx-0 shadow-lg shadow-amber-500/20">
               <ShieldCheck className="w-6 h-6 text-slate-950" />
             </div>
@@ -211,7 +211,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="space-y-3 text-center md:text-left">
+          <div className="space-y-3 text-center md:text-left apple-card-hover p-4 rounded-2xl">
             <div className="w-12 h-12 rounded-2xl gold-gradient-bg flex items-center justify-center mx-auto md:mx-0 shadow-lg shadow-amber-500/20">
               <Users className="w-6 h-6 text-slate-950" />
             </div>

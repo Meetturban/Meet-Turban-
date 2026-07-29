@@ -75,6 +75,9 @@ const Footer = () => {
               <li>
                 <Link to="/track" className="hover:text-amber-400 transition-colors">Track Booking Status</Link>
               </li>
+              <li>
+                <Link to="/terms" className="hover:text-amber-400 font-semibold text-amber-300/90 transition-colors">Terms & Conditions</Link>
+              </li>
             </ul>
           </div>
 
