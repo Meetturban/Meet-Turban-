@@ -178,7 +178,7 @@ const ManagerDashboard = () => {
                       <td className="p-3 text-right">
                         <select
                           value={bkg.status}
-                          onChange={(e) => handleQuickStatusChange(bkg.id, e.target.value)}
+                          onChange={(e) => handleQuickStatusChange(bkg.id || bkg.tracking_id, e.target.value)}
                           className="bg-slate-950 border border-slate-800 text-[11px] text-slate-200 rounded-lg p-1 focus:outline-none focus:border-amber-500"
                         >
                           <option value="Pending">Pending</option>

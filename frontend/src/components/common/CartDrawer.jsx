@@ -49,7 +49,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-100">Booking Bucket / Cart</h2>
+              <h2 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
+                <span>Booking Bucket & Checkout</span>
+              </h2>
               <span className="text-[11px] text-amber-400 font-semibold">
                 {totalItemCount} {totalItemCount === 1 ? 'Service Selected' : 'Services Selected'}
               </span>
@@ -68,21 +70,29 @@ const CartDrawer = ({ isOpen, onClose }) => {
         {/* Drawer Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {selectedServices.length === 0 ? (
-            <div className="text-center py-20 space-y-4">
+            <div className="text-center py-14 space-y-4">
               <ShoppingBag className="w-16 h-16 text-slate-700 mx-auto" />
               <h3 className="text-sm font-bold text-slate-300">Your Bucket is Empty</h3>
               <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-                Browse our royal catalog to add safa tying, groom turbans, or barat entry services.
+                Browse our royal catalog to add safa tying, groom turbans, or barat entry services to your checkout bucket.
               </p>
-              <button
-                onClick={() => {
-                  onClose();
-                  navigate('/services');
-                }}
-                className="gold-gradient-bg text-slate-950 text-xs font-bold px-5 py-2.5 rounded-xl shadow hover:scale-105 transition-all"
-              >
-                Explore Catalog
-              </button>
+              <div className="flex flex-col gap-2 pt-2 max-w-xs mx-auto">
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate('/services');
+                  }}
+                  className="gold-gradient-bg text-slate-950 text-xs font-bold px-5 py-3 rounded-xl shadow hover:scale-105 transition-all"
+                >
+                  Explore Services Catalog
+                </button>
+                <button
+                  onClick={handleCheckout}
+                  className="bg-slate-950 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-bold px-5 py-2.5 rounded-xl transition-all"
+                >
+                  Proceed to Event Checkout
+                </button>
+              </div>
             </div>
           ) : (
             <div className="divide-y divide-slate-800/80">
@@ -134,32 +144,42 @@ const CartDrawer = ({ isOpen, onClose }) => {
         </div>
 
         {/* Drawer Footer & Checkout Summary */}
-        {selectedServices.length > 0 && (
-          <div className="p-5 border-t border-slate-800 bg-slate-950 space-y-4 shrink-0">
-            <div className="space-y-2 text-xs bg-slate-900 p-4 rounded-2xl border border-slate-800">
-              <div className="flex justify-between text-slate-300">
-                <span>Subtotal Amount</span>
-                <strong className="text-slate-100">₹{totalAmount.toLocaleString('en-IN')}</strong>
+        <div className="p-5 border-t border-slate-800 bg-slate-950 space-y-4 shrink-0">
+          {selectedServices.length > 0 ? (
+            <>
+              <div className="space-y-2 text-xs bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                <div className="flex justify-between text-slate-300">
+                  <span>Subtotal Amount</span>
+                  <strong className="text-slate-100">₹{totalAmount.toLocaleString('en-IN')}</strong>
+                </div>
+                <div className="flex justify-between text-amber-400 font-semibold">
+                  <span>20% Advance Deposit</span>
+                  <strong>₹{advanceRequired.toLocaleString('en-IN')}</strong>
+                </div>
+                <div className="flex justify-between text-slate-400 border-t border-slate-800 pt-2">
+                  <span>80% Outstanding on Event</span>
+                  <strong>₹{outstandingAmount.toLocaleString('en-IN')}</strong>
+                </div>
               </div>
-              <div className="flex justify-between text-amber-400 font-semibold">
-                <span>20% Advance Deposit</span>
-                <strong>₹{advanceRequired.toLocaleString('en-IN')}</strong>
-              </div>
-              <div className="flex justify-between text-slate-400 border-t border-slate-800 pt-2">
-                <span>80% Outstanding on Event</span>
-                <strong>₹{outstandingAmount.toLocaleString('en-IN')}</strong>
-              </div>
-            </div>
 
+              <button
+                onClick={handleCheckout}
+                className="w-full gold-gradient-bg text-slate-950 font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-105 transition-all flex items-center justify-center space-x-2"
+              >
+                <span>Proceed to Checkout (₹{totalAmount.toLocaleString('en-IN')})</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
             <button
               onClick={handleCheckout}
-              className="w-full gold-gradient-bg text-slate-950 font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-105 transition-all flex items-center justify-center space-x-2"
+              className="w-full gold-gradient-bg text-slate-950 font-black text-xs py-3 rounded-xl shadow-md hover:scale-105 transition-all flex items-center justify-center space-x-2"
             >
-              <span>Proceed to Complete Booking</span>
+              <span>Proceed to Event Checkout</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
       </div>
     </div>

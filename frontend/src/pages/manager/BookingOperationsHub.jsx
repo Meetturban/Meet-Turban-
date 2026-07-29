@@ -175,7 +175,7 @@ const BookingOperationsHub = () => {
                 <div className="flex items-center space-x-3">
                   <select
                     value={bkg.status}
-                    onChange={(e) => handleStatusChange(bkg.id, e.target.value)}
+                    onChange={(e) => handleStatusChange(bkg.id || bkg.tracking_id, e.target.value)}
                     className="bg-slate-950 border border-amber-500/30 text-xs font-bold text-amber-300 rounded-xl px-3 py-2 focus:outline-none"
                   >
                     <option value="Pending">Pending</option>

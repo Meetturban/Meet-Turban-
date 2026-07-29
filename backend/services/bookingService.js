@@ -74,13 +74,58 @@ const saveLocalServices = (services) => {
 
 const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
+export const normalizeStatusForDb = (statusStr) => {
+  if (!statusStr) return 'pending';
+  const clean = String(statusStr).trim().toLowerCase().replace(/\s+/g, '_');
+  const validDbStatuses = [
+    'pending',
+    'awaiting_advance',
+    'advance_received',
+    'staff_assigned',
+    'confirmed',
+    'in_progress',
+    'completed',
+    'cancelled'
+  ];
+  if (validDbStatuses.includes(clean)) return clean;
+  if (clean === 'awaitingadvance') return 'awaiting_advance';
+  if (clean === 'advancereceived') return 'advance_received';
+  if (clean === 'staffassigned') return 'staff_assigned';
+  if (clean === 'inprogress') return 'in_progress';
+  return 'pending';
+};
+
+export const formatStatusForUi = (statusStr) => {
+  if (!statusStr) return 'Pending';
+  const dbStatus = normalizeStatusForDb(statusStr);
+  const statusMap = {
+    'pending': 'Pending',
+    'awaiting_advance': 'Awaiting Advance',
+    'advance_received': 'Advance Received',
+    'staff_assigned': 'Staff Assigned',
+    'confirmed': 'Confirmed',
+    'in_progress': 'In Progress',
+    'completed': 'Completed',
+    'cancelled': 'Cancelled'
+  };
+  return statusMap[dbStatus] || 'Pending';
+};
+
 const updateBookingInSupabase = async (bookingId, payload) => {
   if (!isSupabaseConfigured || !supabase || !bookingId) return;
   try {
+    const dbPayload = { ...payload };
+    if (dbPayload.status) {
+      dbPayload.status = normalizeStatusForDb(dbPayload.status);
+    }
+    let res;
     if (isUUID(bookingId)) {
-      await supabase.from('bookings').update(payload).eq('id', bookingId);
+      res = await supabase.from('bookings').update(dbPayload).eq('id', bookingId);
     } else {
-      await supabase.from('bookings').update(payload).eq('tracking_id', bookingId);
+      res = await supabase.from('bookings').update(dbPayload).eq('tracking_id', bookingId);
+    }
+    if (res?.error) {
+      console.error('Supabase booking update error:', res.error);
     }
   } catch (err) {
     console.warn('Supabase booking update fallback:', err);
@@ -654,28 +699,39 @@ export const fetchAllBookings = async () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        saveLocalBookings(data);
-        return data;
+        const formatted = data.map(bkg => ({
+          ...bkg,
+          status: formatStatusForUi(bkg.status)
+        }));
+        saveLocalBookings(formatted);
+        return formatted;
       }
     } catch (err) {
       console.warn('Supabase fetch bookings fallback:', err);
     }
   }
-  return getLocalBookings();
+  const localList = getLocalBookings();
+  return localList.map(bkg => ({
+    ...bkg,
+    status: formatStatusForUi(bkg.status)
+  }));
 };
 
 export const updateBookingStatus = async (bookingId, newStatus) => {
-  await updateBookingInSupabase(bookingId, { status: newStatus });
+  const uiStatus = formatStatusForUi(newStatus);
+  const dbStatus = normalizeStatusForDb(newStatus);
+
+  await updateBookingInSupabase(bookingId, { status: dbStatus });
 
   const bookings = getLocalBookings();
   const idx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);
   if (idx !== -1) {
-    bookings[idx].status = newStatus;
+    bookings[idx].status = uiStatus;
     saveLocalBookings(bookings);
     const targetBkg = bookings[idx];
     const dueAmt = targetBkg.outstanding_amount ?? (targetBkg.total_amount - (targetBkg.advance_amount || 0));
     const notifTitle = `Booking Status Updated (${targetBkg.tracking_id})`;
-    const notifMsg = `${targetBkg.customer_name} - Status: ${newStatus} | Total: ₹${Number(targetBkg.total_amount).toLocaleString('en-IN')} | Advance: ₹${Number(targetBkg.advance_amount || 0).toLocaleString('en-IN')} | Remaining Due: ₹${Number(dueAmt).toLocaleString('en-IN')}`;
+    const notifMsg = `${targetBkg.customer_name} - Status: ${uiStatus} | Total: ₹${Number(targetBkg.total_amount).toLocaleString('en-IN')} | Advance: ₹${Number(targetBkg.advance_amount || 0).toLocaleString('en-IN')} | Remaining Due: ₹${Number(dueAmt).toLocaleString('en-IN')}`;
     await addNotification('payment_update', notifTitle, notifMsg);
   }
   return { success: true };

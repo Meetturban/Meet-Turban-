@@ -21,8 +21,22 @@ export const BookingProvider = ({ children }) => {
     eventTime: '10:00'
   });
 
-  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedServices, setSelectedServices] = useState(() => {
+    try {
+      const saved = localStorage.getItem('safa_cart_services');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [submittedBooking, setSubmittedBooking] = useState(null);
+
+  // Sync selected services to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('safa_cart_services', JSON.stringify(selectedServices));
+    } catch (e) {}
+  }, [selectedServices]);
 
   // Sync user details if user logs in
   useEffect(() => {
@@ -96,6 +110,9 @@ export const BookingProvider = ({ children }) => {
     setStep(1);
     setEventDetails({ venue: '', city: 'Jaipur', eventDate: '', eventTime: '10:00' });
     setSelectedServices([]);
+    try {
+      localStorage.removeItem('safa_cart_services');
+    } catch (e) {}
     setSubmittedBooking(null);
   };
 
