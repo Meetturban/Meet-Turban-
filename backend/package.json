@@ -1,0 +1,13 @@
+{
+  "name": "meetturban-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch services/bookingService.js",
+    "start": "node services/bookingService.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.9"
+  }
+}
