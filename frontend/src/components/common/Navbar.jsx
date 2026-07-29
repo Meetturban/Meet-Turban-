@@ -40,7 +40,7 @@ const Navbar = () => {
       <header className="sticky top-0 z-40 glass-panel border-b border-amber-500/20 shadow-2xl bg-slate-950/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            
+
             {/* Brand Logo */}
             <Link to="/" className="flex items-center space-x-3 group">
               {settings.logo_url ? (
@@ -68,11 +68,10 @@ const Navbar = () => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`text-sm font-semibold transition-colors duration-200 ${
-                      isActive
+                    className={`text-sm font-semibold transition-colors duration-200 ${isActive
                         ? 'text-amber-400 border-b-2 border-amber-400 pb-1'
                         : 'text-slate-300 hover:text-amber-300'
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -102,7 +101,7 @@ const Navbar = () => {
 
             {/* Header Quick Actions, Notifications, Cart & Auth */}
             <div className="hidden lg:flex items-center space-x-4">
-              
+
               {/* Quick Track Input */}
               <form onSubmit={handleQuickTrack} className="relative">
                 <input
@@ -139,7 +138,7 @@ const Navbar = () => {
               {user ? (
                 <div className="flex items-center space-x-3 pl-2 border-l border-slate-800">
                   <Link
-                    to="/profile"
+                    to={user.role === 'staff' ? '/staff' : '/manager'}
                     className="flex items-center space-x-2 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-full hover:bg-amber-500/20 transition-all"
                   >
                     <User className="w-3.5 h-3.5" />
@@ -157,15 +156,10 @@ const Navbar = () => {
                 <div className="flex items-center space-x-3">
                   <Link
                     to="/login"
-                    className="text-xs font-semibold text-slate-300 hover:text-amber-300 px-3 py-2"
+                    className="text-xs font-bold text-slate-950 gold-gradient-bg px-4 py-2 rounded-full shadow-md shadow-amber-500/20 hover:scale-105 transition-transform flex items-center space-x-1.5"
                   >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="text-xs font-bold text-slate-950 gold-gradient-bg px-4 py-2 rounded-full shadow-md shadow-amber-500/20 hover:scale-105 transition-transform"
-                  >
-                    Register
+                    <User className="w-3.5 h-3.5" />
+                    <span>Portal Sign In</span>
                   </Link>
                 </div>
               )}
@@ -196,96 +190,90 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Drawer */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-slate-950 border-b border-amber-500/20 px-4 pt-4 pb-6 space-y-4">
-            <form onSubmit={handleQuickTrack} className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Track Booking (e.g. SAFA-2026-000001)"
-                value={quickTrackingId}
-                onChange={(e) => setQuickTrackingId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 text-sm text-slate-200 rounded-lg py-2.5 pl-3 pr-10 focus:outline-none focus:border-amber-500"
-              />
-              <button type="submit" aria-label="Search Tracking ID" className="absolute right-3 top-3 text-amber-400">
-                <Search className="w-4 h-4" />
-              </button>
-            </form>
+          {/* Mobile Drawer */}
+          {mobileMenuOpen && (
+            <div className="md:hidden bg-slate-950 border-b border-amber-500/20 px-4 pt-4 pb-6 space-y-4">
+              <form onSubmit={handleQuickTrack} className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Track Booking (e.g. SAFA-2026-000001)"
+                  value={quickTrackingId}
+                  onChange={(e) => setQuickTrackingId(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 text-sm text-slate-200 rounded-lg py-2.5 pl-3 pr-10 focus:outline-none focus:border-amber-500"
+                />
+                <button type="submit" aria-label="Search Tracking ID" className="absolute right-3 top-3 text-amber-400">
+                  <Search className="w-4 h-4" />
+                </button>
+              </form>
 
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-medium text-slate-200 hover:text-amber-400 py-1"
-              >
-                {link.label}
-              </Link>
-            ))}
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-base font-medium text-slate-200 hover:text-amber-400 py-1"
+                >
+                  {link.label}
+                </Link>
+              ))}
 
-            {(user?.role === 'manager' || user?.role === 'admin') && (
-              <Link
-                to="/manager"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-bold text-amber-400 hover:text-amber-300 py-1"
-              >
-                Manager Operations Dashboard
-              </Link>
-            )}
-
-            {user?.role === 'staff' && (
-              <Link
-                to="/staff"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-bold text-emerald-400 hover:text-emerald-300 py-1"
-              >
-                Staff Artist Dashboard
-              </Link>
-            )}
-
-            <div className="pt-4 border-t border-slate-800">
-              {user ? (
-                <div className="flex items-center justify-between">
-                  <Link
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-sm font-semibold text-amber-400 flex items-center space-x-2"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>My Profile ({user.name})</span>
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-xs font-semibold text-red-400 flex items-center space-x-1"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    to="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-center text-sm font-semibold text-slate-200 border border-slate-800 py-2 rounded-lg"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-center text-sm font-bold text-slate-950 gold-gradient-bg py-2 rounded-lg"
-                  >
-                    Register
-                  </Link>
-                </div>
+              {(user?.role === 'manager' || user?.role === 'admin') && (
+                <Link
+                  to="/manager"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-base font-bold text-amber-400 hover:text-amber-300 py-1"
+                >
+                  Manager Operations Dashboard
+                </Link>
               )}
+
+              {user?.role === 'staff' && (
+                <Link
+                  to="/staff"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-base font-bold text-emerald-400 hover:text-emerald-300 py-1"
+                >
+                  Staff Artist Dashboard
+                </Link>
+              )}
+
+              <div className="pt-4 border-t border-slate-800">
+                {user ? (
+                  <div className="flex items-center justify-between">
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-sm font-semibold text-amber-400 flex items-center space-x-2"
+                    >
+                      <User className="w-4 h-4" />
+                      <span>My Profile ({user.name})</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-xs font-semibold text-red-400 flex items-center space-x-1"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-center text-sm font-bold text-slate-950 gold-gradient-bg py-2.5 rounded-xl shadow-md"
+                    >
+                      Portal Sign In (Manager / Staff)
+                    </Link>
+                  </div>
+                )}
+
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </header>
 
       {/* Cart Drawer Popup */}

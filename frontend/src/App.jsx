@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import { AuthProvider } from './context/AuthContext';
 import { BookingProvider } from './context/BookingContext';
 import { SettingsProvider } from './context/SettingsContext';
@@ -49,8 +50,9 @@ function App() {
                     <Route path="/book" element={<BookingPage />} />
                     <Route path="/track" element={<TrackingPage />} />
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/register" element={<Navigate to="/login" replace />} />
+                    <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+
                     <Route
                       path="/profile"
                       element={
