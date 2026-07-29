@@ -203,9 +203,10 @@ Hello Manager, I want to pay ₹${Number(payAmount).toLocaleString('en-IN')} for
             const stepNum = getStatusStep(bkg.status);
             const statuses = ['Pending', 'Confirmed', 'In Progress', 'Completed'];
             
-            const isPendingAdvance = bkg.status === 'Pending' || bkg.status === 'Awaiting Advance';
-            const isAdvanceConfirmed = bkg.status === 'Advance Received' || bkg.status === 'Confirmed' || bkg.status === 'Staff Assigned' || bkg.status === 'In Progress';
-            const isCompleted = bkg.status === 'Completed';
+            const stLower = (bkg.status || '').toLowerCase();
+            const isPendingAdvance = stLower === 'pending' || stLower === 'awaiting advance' || stLower === 'awaiting_advance';
+            const isCompleted = stLower === 'completed';
+            const isAdvanceConfirmed = !isPendingAdvance && !isCompleted && stLower !== 'cancelled';
 
             const assignedStaff = bkg.assignedStaffInfo;
 
@@ -410,56 +411,56 @@ Hello Manager, I want to pay ₹${Number(payAmount).toLocaleString('en-IN')} for
                   </div>
 
                   {isPendingAdvance && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Option A: Pay 20% Advance */}
-                      <a
-                        href={buildWhatsAppPaymentUrl(bkg, 'advance')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.02]"
-                      >
-                        <MessageCircle className="w-4 h-4 fill-current" />
-                        <span>Pay 20% Advance (₹{Number(bkg.advance_amount).toLocaleString('en-IN')})</span>
-                      </a>
+                    <div className="space-y-3">
+                      <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        <span>Status Pending — Select Payment Option (2 Options Available):</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Option 1: Pay 20% Advance */}
+                        <a
+                          href={buildWhatsAppPaymentUrl(bkg, 'advance')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.02]"
+                        >
+                          <MessageCircle className="w-4 h-4 fill-current" />
+                          <span>Option 1: Pay 20% Advance (₹{Number(bkg.advance_amount).toLocaleString('en-IN')})</span>
+                        </a>
 
-                      {/* Option B: Pay Full Amount */}
-                      <a
-                        href={buildWhatsAppPaymentUrl(bkg, 'full')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="gold-gradient-bg text-slate-950 font-black text-xs py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.02]"
-                      >
-                        <Sparkles className="w-4 h-4 fill-current" />
-                        <span>Pay Full Amount (₹{Number(bkg.total_amount).toLocaleString('en-IN')})</span>
-                      </a>
+                        {/* Option 2: Pay Full Amount */}
+                        <a
+                          href={buildWhatsAppPaymentUrl(bkg, 'full')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="gold-gradient-bg text-slate-950 font-black text-xs py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.02]"
+                        >
+                          <Sparkles className="w-4 h-4 fill-current" />
+                          <span>Option 2: Pay Full Amount (₹{Number(bkg.total_amount).toLocaleString('en-IN')})</span>
+                        </a>
+                      </div>
                     </div>
                   )}
 
                   {isAdvanceConfirmed && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Primary Option: Pay Remaining 80% Outstanding */}
+                    <div className="space-y-3">
+                      <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Advance Received — Single Settlement Option Remaining:</span>
+                      </div>
+                      {/* Single 1 Option: Pay Remaining 80% Outstanding Balance */}
                       <a
                         href={buildWhatsAppPaymentUrl(bkg, 'outstanding')}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="gold-gradient-bg text-slate-950 font-black text-xs py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.02]"
+                        className="w-full gold-gradient-bg text-slate-950 font-black text-sm py-4 px-6 rounded-xl shadow-xl shadow-amber-500/25 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]"
                       >
-                        <CreditCard className="w-4 h-4" />
+                        <CreditCard className="w-5 h-5" />
                         <span>Pay Outstanding Balance 80% (₹{Number(bkg.outstanding_amount).toLocaleString('en-IN')})</span>
-                      </a>
-
-                      {/* Secondary Option: Inquire on WhatsApp */}
-                      <a
-                        href={`https://wa.me/${managerPhone}?text=${encodeURIComponent(`Hello Manager, regarding my confirmed booking ${bkg.tracking_id}, I would like to make the remaining payment of ₹${Number(bkg.outstanding_amount).toLocaleString('en-IN')}.`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-slate-900 border border-slate-800 hover:border-emerald-500 text-slate-200 text-xs font-bold py-3.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition-all"
-                      >
-                        <MessageCircle className="w-4 h-4 text-emerald-400 fill-current" />
-                        <span>WhatsApp Manager Payment Desk</span>
                       </a>
                     </div>
                   )}
+
 
                   {isCompleted && (
                     <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl text-center space-y-1">
