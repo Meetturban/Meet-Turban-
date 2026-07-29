@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch services/bookingService.js",
-    "start": "node services/bookingService.js"
+    "dev": "node --watch server.js",
+    "start": "node server.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.9"
+    "@supabase/supabase-js": "^2.110.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
   }
 }

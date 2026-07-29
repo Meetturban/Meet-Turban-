@@ -26,35 +26,54 @@ const INITIAL_NOTIFICATIONS = [
   }
 ];
 
-// Helper functions for Local Storage
+// Safe Memory Storage Polyfill for Node.js (Render / Server) Environment
+const memoryStore = new Map();
+
+const safeLocalStorage = {
+  getItem: (key) => {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try { return localStorage.getItem(key); } catch (e) { return memoryStore.get(key) || null; }
+    }
+    return memoryStore.get(key) || null;
+  },
+  setItem: (key, value) => {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try { localStorage.setItem(key, value); } catch (e) { memoryStore.set(key, value); }
+    }
+    memoryStore.set(key, value);
+  }
+};
+
+// Helper functions for Storage
 const getLocalNotifications = () => {
-  const stored = localStorage.getItem(LOCAL_NOTIFICATIONS_KEY);
+  const stored = safeLocalStorage.getItem(LOCAL_NOTIFICATIONS_KEY);
   if (!stored) {
-    localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(INITIAL_NOTIFICATIONS));
+    safeLocalStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(INITIAL_NOTIFICATIONS));
     return INITIAL_NOTIFICATIONS;
   }
   return JSON.parse(stored);
 };
 
 const saveLocalNotifications = (list) => {
-  localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(list));
+  safeLocalStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(list));
 };
 
 const getLocalServices = () => {
-  const stored = localStorage.getItem(LOCAL_SERVICES_KEY);
+  const stored = safeLocalStorage.getItem(LOCAL_SERVICES_KEY);
   if (!stored) {
-    localStorage.setItem(LOCAL_SERVICES_KEY, JSON.stringify(INITIAL_SERVICES));
+    safeLocalStorage.setItem(LOCAL_SERVICES_KEY, JSON.stringify(INITIAL_SERVICES));
     return INITIAL_SERVICES;
   }
   return JSON.parse(stored);
 };
 
 const saveLocalServices = (services) => {
-  localStorage.setItem(LOCAL_SERVICES_KEY, JSON.stringify(services));
+  safeLocalStorage.setItem(LOCAL_SERVICES_KEY, JSON.stringify(services));
 };
 
+
 const getLocalStaff = () => {
-  const stored = localStorage.getItem(LOCAL_STAFF_KEY);
+  const stored = safeLocalStorage.getItem(LOCAL_STAFF_KEY);
   if (!stored) {
     const initialStaff = [
       {
@@ -78,18 +97,18 @@ const getLocalStaff = () => {
         created_at: new Date().toISOString()
       }
     ];
-    localStorage.setItem(LOCAL_STAFF_KEY, JSON.stringify(initialStaff));
+    safeLocalStorage.setItem(LOCAL_STAFF_KEY, JSON.stringify(initialStaff));
     return initialStaff;
   }
   return JSON.parse(stored);
 };
 
 const saveLocalStaff = (staffList) => {
-  localStorage.setItem(LOCAL_STAFF_KEY, JSON.stringify(staffList));
+  safeLocalStorage.setItem(LOCAL_STAFF_KEY, JSON.stringify(staffList));
 };
 
 const getLocalBookings = () => {
-  const stored = localStorage.getItem(LOCAL_BOOKINGS_KEY);
+  const stored = safeLocalStorage.getItem(LOCAL_BOOKINGS_KEY);
   if (!stored) {
     const seedBookings = [
       {
@@ -136,15 +155,16 @@ const getLocalBookings = () => {
         created_at: new Date().toISOString()
       }
     ];
-    localStorage.setItem(LOCAL_BOOKINGS_KEY, JSON.stringify(seedBookings));
+    safeLocalStorage.setItem(LOCAL_BOOKINGS_KEY, JSON.stringify(seedBookings));
     return seedBookings;
   }
   return JSON.parse(stored);
 };
 
 const saveLocalBookings = (bookings) => {
-  localStorage.setItem(LOCAL_BOOKINGS_KEY, JSON.stringify(bookings));
+  safeLocalStorage.setItem(LOCAL_BOOKINGS_KEY, JSON.stringify(bookings));
 };
+
 
 // Tracking ID Generator (Format: SAFA-YYYY-XXXXXX)
 export const generateTrackingId = () => {
