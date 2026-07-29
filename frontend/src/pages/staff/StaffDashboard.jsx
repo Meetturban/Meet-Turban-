@@ -21,6 +21,10 @@ const StaffDashboard = () => {
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(() => {
+      loadData();
+    }, 4000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
   const handleWorkflowAction = async (bookingId, action) => {

@@ -35,6 +35,10 @@ const TrackingPage = () => {
   useEffect(() => {
     if (initialId || (initialMobile && initialDate)) {
       executeSearch(initialId, initialMobile, initialDate);
+      const interval = setInterval(() => {
+        executeSearch(initialId, initialMobile, initialDate);
+      }, 4000);
+      return () => clearInterval(interval);
     }
   }, [initialId, initialMobile, initialDate]);
 

@@ -111,10 +111,22 @@ export const formatStatusForUi = (statusStr) => {
   return statusMap[dbStatus] || 'Pending';
 };
 
+const SUPABASE_BOOKING_COLUMNS = [
+  'id', 'tracking_id', 'customer_id', 'customer_name', 'customer_mobile',
+  'customer_alt_mobile', 'venue', 'city', 'event_date', 'event_time',
+  'status', 'staff_id', 'total_amount', 'advance_amount', 'outstanding_amount',
+  'customer_email', 'created_at'
+];
+
 const updateBookingInSupabase = async (bookingId, payload) => {
   if (!isSupabaseConfigured || !supabase || !bookingId) return;
   try {
-    const dbPayload = { ...payload };
+    const dbPayload = {};
+    for (const key of Object.keys(payload)) {
+      if (SUPABASE_BOOKING_COLUMNS.includes(key)) {
+        dbPayload[key] = payload[key];
+      }
+    }
     if (dbPayload.status) {
       dbPayload.status = normalizeStatusForDb(dbPayload.status);
     }
@@ -125,11 +137,43 @@ const updateBookingInSupabase = async (bookingId, payload) => {
       res = await supabase.from('bookings').update(dbPayload).eq('tracking_id', bookingId);
     }
     if (res?.error) {
-      console.error('Supabase booking update error:', res.error);
+      console.warn('Supabase booking update notice:', res.error);
     }
   } catch (err) {
     console.warn('Supabase booking update fallback:', err);
   }
+};
+
+export const formatBookingWithStaff = (bkg, staffList = []) => {
+  if (!bkg) return bkg;
+  const stf = staffList.find(s => 
+    (bkg.staff_id && s.id === bkg.staff_id) || 
+    (bkg.staff_assigned && s.name && s.name.toLowerCase().includes(bkg.staff_assigned.toLowerCase()))
+  );
+
+  const staffAssignedName = stf ? stf.name : (bkg.staff_assigned || null);
+  const staffMobileNum = stf ? stf.mobile : (bkg.staff_mobile || null);
+  const staffPhotoUrl = stf ? stf.profile_photo : (bkg.staff_photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80');
+  const staffExp = stf ? stf.experience : (bkg.staff_experience || '5+ Years');
+
+  const assignedStaffInfo = (stf || staffAssignedName) ? {
+    id: stf ? stf.id : bkg.staff_id,
+    name: staffAssignedName,
+    mobile: staffMobileNum || '9829012345',
+    experience: staffExp,
+    profile_photo: staffPhotoUrl
+  } : null;
+
+  return {
+    ...bkg,
+    status: formatStatusForUi(bkg.status),
+    staff_id: bkg.staff_id || (stf ? stf.id : null),
+    staff_assigned: staffAssignedName,
+    staff_mobile: staffMobileNum,
+    staff_photo: staffPhotoUrl,
+    staff_experience: staffExp,
+    assignedStaffInfo
+  };
 };
 
 const getLocalStaff = () => {
@@ -691,6 +735,7 @@ export const createBooking = async (bookingData) => {
 };
 
 export const fetchAllBookings = async () => {
+  const staffList = getLocalStaff();
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -698,10 +743,7 @@ export const fetchAllBookings = async () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        const formatted = data.map(bkg => ({
-          ...bkg,
-          status: formatStatusForUi(bkg.status)
-        }));
+        const formatted = data.map(bkg => formatBookingWithStaff(bkg, staffList));
         saveLocalBookings(formatted);
         return formatted;
       }
@@ -710,10 +752,7 @@ export const fetchAllBookings = async () => {
     }
   }
   const localList = getLocalBookings();
-  return localList.map(bkg => ({
-    ...bkg,
-    status: formatStatusForUi(bkg.status)
-  }));
+  return localList.map(bkg => formatBookingWithStaff(bkg, staffList));
 };
 
 export const updateBookingStatus = async (bookingId, newStatus) => {
@@ -739,7 +778,6 @@ export const updateBookingStatus = async (bookingId, newStatus) => {
 export const updateBookingDetails = async (bookingId, updatedFields) => {
   await updateBookingInSupabase(bookingId, updatedFields);
 
-
   const bookings = getLocalBookings();
   const idx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);
   if (idx !== -1) {
@@ -751,6 +789,7 @@ export const updateBookingDetails = async (bookingId, updatedFields) => {
 
 export const searchBooking = async ({ trackingId, mobile, eventDate }) => {
   let matches = [];
+  const staffList = getLocalStaff();
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -787,20 +826,7 @@ export const searchBooking = async ({ trackingId, mobile, eventDate }) => {
     }
   }
 
-  const staffList = await fetchStaffMembers();
-
-  return matches.map(bkg => {
-    const stf = staffList.find(s => s.id === bkg.staff_id || s.name === bkg.staff_assigned);
-    return {
-      ...bkg,
-      assignedStaffInfo: stf || (bkg.staff_assigned ? {
-        name: bkg.staff_assigned,
-        mobile: bkg.staff_mobile || '9829012345',
-        experience: '8+ Years',
-        profile_photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80'
-      } : null)
-    };
-  });
+  return matches.map(bkg => formatBookingWithStaff(bkg, staffList));
 };
 
 export const fetchUserBookings = async (userEmailOrMobile) => {
