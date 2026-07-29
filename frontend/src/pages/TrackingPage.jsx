@@ -20,8 +20,10 @@ const TrackingPage = () => {
 
   const managerPhone = import.meta.env.VITE_MANAGER_WHATSAPP || '919876543210';
 
-  const executeSearch = async (id, mob, dt) => {
-    setLoading(true);
+  const executeSearch = async (id, mob, dt, isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     setSearched(true);
     const data = await searchBooking({
       trackingId: id,
@@ -29,16 +31,32 @@ const TrackingPage = () => {
       eventDate: dt
     });
     setResults(data);
-    setLoading(false);
+    if (!isSilent) {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (initialId || (initialMobile && initialDate)) {
-      executeSearch(initialId, initialMobile, initialDate);
+      executeSearch(initialId, initialMobile, initialDate, false);
+
+      // Silent background poll (0 spinner, 0 flicker)
       const interval = setInterval(() => {
-        executeSearch(initialId, initialMobile, initialDate);
-      }, 4000);
-      return () => clearInterval(interval);
+        executeSearch(initialId, initialMobile, initialDate, true);
+      }, 3000);
+
+      // Instant cross-tab storage listener for 0-delay manager updates
+      const handleStorageChange = (e) => {
+        if (e.key === 'safa_bookings_db' || e.key === 'safa_staff_db') {
+          executeSearch(initialId, initialMobile, initialDate, true);
+        }
+      };
+      window.addEventListener('storage', handleStorageChange);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('storage', handleStorageChange);
+      };
     }
   }, [initialId, initialMobile, initialDate]);
 
@@ -46,10 +64,10 @@ const TrackingPage = () => {
     e.preventDefault();
     if (searchMode === 'id' && trackingIdInput.trim()) {
       setSearchParams({ id: trackingIdInput.trim() });
-      executeSearch(trackingIdInput, '', '');
+      executeSearch(trackingIdInput, '', '', false);
     } else if (searchMode === 'mobile' && mobileInput.trim() && eventDateInput) {
       setSearchParams({ mobile: mobileInput.trim(), date: eventDateInput });
-      executeSearch('', mobileInput, eventDateInput);
+      executeSearch('', mobileInput, eventDateInput, false);
     }
   };
 

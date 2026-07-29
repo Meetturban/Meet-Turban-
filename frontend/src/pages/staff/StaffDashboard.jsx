@@ -11,20 +11,39 @@ const StaffDashboard = () => {
   const [assignedBookings, setAssignedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     if (user) {
-      const data = await fetchStaffAssignedBookings(user.mobile || user.email);
+      const data = await fetchStaffAssignedBookings(user.mobile || user.email || user.name);
       setAssignedBookings(data);
     }
-    setLoading(false);
+    if (!isSilent) {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
-    loadData();
+    loadData(false);
+
+    // Silent background poll (0 spinner, 0 flicker)
     const interval = setInterval(() => {
-      loadData();
-    }, 4000);
-    return () => clearInterval(interval);
+      loadData(true);
+    }, 3000);
+
+    // Instant cross-tab storage listener for 0-delay manager updates
+    const handleStorageChange = (e) => {
+      if (e.key === 'safa_bookings_db' || e.key === 'safa_staff_db') {
+        loadData(true);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [loadData]);
 
   const handleWorkflowAction = async (bookingId, action) => {
