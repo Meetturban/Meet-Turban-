@@ -122,7 +122,7 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              {activeTab === 'manager' ? 'Manager Email / Username' : 'Staff Email / Mobile'}
+              {activeTab === 'manager' ? 'Manager Email / Username' : 'Staff Name'}
             </label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-amber-400/70" />
@@ -130,8 +130,8 @@ const LoginPage = () => {
                 type="text"
                 placeholder={
                   activeTab === 'manager'
-                    ? 'manager@safaelegance.com'
-                    : 'staff@safaelegance.com'
+                    ? 'Enter manager email or username'
+                    : 'Enter Staff Name (e.g. Master Vikram Usta)'
                 }
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -143,13 +143,17 @@ const LoginPage = () => {
 
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Password
+              {activeTab === 'manager' ? 'Password' : '5-Digit Mobile Code'}
             </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-amber-400/70" />
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder={
+                  activeTab === 'manager'
+                    ? '••••••••'
+                    : 'Enter 5-digit mobile code (e.g. 12345)'
+                }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 text-sm text-slate-100 rounded-xl py-3 pl-11 pr-4 focus:outline-none transition-all"
@@ -171,13 +175,6 @@ const LoginPage = () => {
             <span>{loading ? 'Authenticating...' : `Sign In as ${activeTab.toUpperCase()}`}</span>
           </button>
         </form>
-
-        <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-[11px] text-slate-400 space-y-1 text-center">
-          <p className="font-bold text-amber-400 uppercase tracking-wider">Default Demo Credentials</p>
-          <p><strong className="text-slate-200">Manager:</strong> manager@safaelegance.com | <strong className="text-slate-200">Pass:</strong> manager123</p>
-          <p><strong className="text-slate-200">Staff:</strong> staff@safaelegance.com | <strong className="text-slate-200">Pass:</strong> staff123</p>
-        </div>
-
       </div>
     </div>
   );

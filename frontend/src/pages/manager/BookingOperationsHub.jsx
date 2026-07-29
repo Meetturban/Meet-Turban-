@@ -45,19 +45,49 @@ const BookingOperationsHub = () => {
   }, []);
 
   const handleStatusChange = async (id, newStatus) => {
-    await updateBookingStatus(id, newStatus);
-    loadData();
+    setBookings(prev => prev.map(bkg => {
+      if (bkg.id === id || bkg.tracking_id === id) {
+        return { ...bkg, status: newStatus };
+      }
+      return bkg;
+    }));
+    updateBookingStatus(id, newStatus).catch(e => console.warn(e));
   };
 
   const handleAssignStaff = async (bookingId, staffId) => {
     if (!staffId) return;
-    await assignStaffToBooking(bookingId, staffId);
-    loadData();
+    const staffObj = staffList.find(s => s.id === staffId);
+    if (staffObj) {
+      setBookings(prev => prev.map(bkg => {
+        if (bkg.id === bookingId || bkg.tracking_id === bookingId) {
+          return {
+            ...bkg,
+            staff_id: staffObj.id,
+            staff_assigned: staffObj.name,
+            staff_mobile: staffObj.mobile,
+            status: 'Staff Assigned'
+          };
+        }
+        return bkg;
+      }));
+    }
+    assignStaffToBooking(bookingId, staffId).catch(e => console.warn(e));
   };
 
   const handleRemoveStaff = async (bookingId) => {
-    await removeStaffAssignment(bookingId);
-    loadData();
+    setBookings(prev => prev.map(bkg => {
+      if (bkg.id === bookingId || bkg.tracking_id === bookingId) {
+        return {
+          ...bkg,
+          staff_id: null,
+          staff_assigned: null,
+          staff_mobile: null,
+          status: 'Confirmed'
+        };
+      }
+      return bkg;
+    }));
+    removeStaffAssignment(bookingId).catch(e => console.warn(e));
   };
 
   const openEditModal = (bkg) => {

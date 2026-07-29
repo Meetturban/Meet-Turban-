@@ -533,11 +533,11 @@ export const deleteStaffMember = async (staffId) => {
 
 // Staff Assignment Engine
 export const assignStaffToBooking = async (bookingId, staffId) => {
-  const bookings = await fetchAllBookings();
-  const staffList = await fetchStaffMembers();
+  const localBookings = getLocalBookings();
+  const localStaff = getLocalStaff();
 
-  const bookingObj = bookings.find(b => b.id === bookingId || b.tracking_id === bookingId);
-  const staffObj = staffList.find(s => s.id === staffId);
+  const bookingObj = localBookings.find(b => b.id === bookingId || b.tracking_id === bookingId);
+  const staffObj = localStaff.find(s => s.id === staffId);
 
   if (bookingObj && staffObj) {
     const updatePayload = {
@@ -549,17 +549,16 @@ export const assignStaffToBooking = async (bookingId, staffId) => {
       status: 'Staff Assigned'
     };
 
-    await updateBookingInSupabase(bookingObj.id || bookingObj.tracking_id, updatePayload);
-
-
-    const localBookings = getLocalBookings();
     const idx = localBookings.findIndex(b => b.id === bookingObj.id || b.tracking_id === bookingObj.tracking_id);
     if (idx !== -1) {
       localBookings[idx] = { ...localBookings[idx], ...updatePayload };
       saveLocalBookings(localBookings);
     }
 
-    await addNotification('staff_assignment', 'Staff Artist Assigned', `${staffObj.name} assigned to booking ${bookingObj.tracking_id}.`);
+    // Async background sync to Supabase & notifications
+    updateBookingInSupabase(bookingObj.id || bookingObj.tracking_id, updatePayload).catch(e => console.warn(e));
+    addNotification('staff_assignment', 'Staff Artist Assigned', `${staffObj.name} assigned to booking ${bookingObj.tracking_id}.`).catch(e => console.warn(e));
+
     return { success: true, booking: { ...bookingObj, ...updatePayload } };
   }
   return { success: false, error: 'Booking or Staff not found' };
@@ -575,14 +574,14 @@ export const removeStaffAssignment = async (bookingId) => {
     status: 'Confirmed'
   };
 
-  await updateBookingInSupabase(bookingId, resetPayload);
-
   const bookings = getLocalBookings();
   const bookingIdx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);
   if (bookingIdx !== -1) {
     bookings[bookingIdx] = { ...bookings[bookingIdx], ...resetPayload };
     saveLocalBookings(bookings);
   }
+
+  updateBookingInSupabase(bookingId, resetPayload).catch(e => console.warn(e));
   return { success: true };
 };
 

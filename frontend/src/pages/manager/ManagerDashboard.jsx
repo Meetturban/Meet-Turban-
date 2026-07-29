@@ -18,8 +18,18 @@ const ManagerDashboard = () => {
   }, []);
 
   const handleQuickStatusChange = async (id, status) => {
-    await updateBookingStatus(id, status);
-    loadData();
+    setMetrics(prev => {
+      if (!prev) return prev;
+      const updatedRecent = prev.recentBookings.map(bkg => {
+        if (bkg.id === id || bkg.tracking_id === id) {
+          return { ...bkg, status };
+        }
+        return bkg;
+      });
+      return { ...prev, recentBookings: updatedRecent };
+    });
+
+    updateBookingStatus(id, status).catch(e => console.warn(e));
   };
 
   if (loading) {

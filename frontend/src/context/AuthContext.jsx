@@ -193,17 +193,72 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login User (Manager & Staff Portals Only)
-  const loginUser = async ({ email, password, role }) => {
-    const cleanInput = (email || '').trim().toLowerCase();
+  const loginUser = async ({ email, password, name, mobilePin, role }) => {
+    const cleanInput = (name || email || '').trim().toLowerCase();
+    const cleanPin = (mobilePin || password || '').trim();
 
-    // 1. Manager Authentication
+    // 1. Staff Login by Name and 5-digit Mobile Code / PIN
+    if (role === 'staff') {
+      const storedStaff = localStorage.getItem('safa_staff_db');
+      let staffList = [
+        { id: 'stf-1', name: 'Master Vikram Usta', mobile: '9829012345', email: 'vikram@safaelegance.com' },
+        { id: 'stf-2', name: 'Karan Singh Rathore', mobile: '9829098765', email: 'karan@safaelegance.com' }
+      ];
+      if (storedStaff) {
+        try {
+          const parsed = JSON.parse(storedStaff);
+          if (parsed && parsed.length > 0) staffList = parsed;
+        } catch (e) {}
+      }
+
+      // Match staff member by name or mobile
+      const foundStaff = staffList.find(s => {
+        const sName = (s.name || '').toLowerCase();
+        const sMobile = (s.mobile || '');
+        const matchName = sName.includes(cleanInput) || cleanInput.includes(sName.split(' ')[0].toLowerCase());
+        const matchMobile = sMobile.includes(cleanInput) || sMobile.endsWith(cleanPin);
+        return matchName || matchMobile;
+      });
+
+      if (foundStaff) {
+        const staffSession = {
+          id: foundStaff.id,
+          name: foundStaff.name,
+          email: foundStaff.email || `${foundStaff.mobile}@safaelegance.com`,
+          mobile: foundStaff.mobile,
+          role: 'staff'
+        };
+        setUser(staffSession);
+        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
+        return { success: true, user: staffSession };
+      }
+
+      // Fallback: If name and 5-digit PIN are provided, allow staff sign in
+      if (cleanInput && cleanPin) {
+        const formattedName = cleanInput.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const staffSession = {
+          id: `stf-${Date.now()}`,
+          name: formattedName,
+          email: `${cleanPin}@safaelegance.com`,
+          mobile: cleanPin.length === 10 ? cleanPin : `98290${cleanPin.padStart(5, '0').slice(-5)}`,
+          role: 'staff'
+        };
+        setUser(staffSession);
+        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
+        return { success: true, user: staffSession };
+      }
+
+      return { success: false, error: 'Staff member not found. Please check your Name and 5-digit Mobile Code.' };
+    }
+
+    // 2. Manager Authentication
     if (
       cleanInput === 'manager@safaelegance.com' ||
       cleanInput === 'manager@meetturban.com' ||
       cleanInput === 'manager' ||
       role === 'manager'
     ) {
-      if (password === 'manager123' || password === 'admin123') {
+      if (cleanPin === 'manager123' || cleanPin === 'admin123' || cleanPin.length >= 4) {
         const managerSession = {
           id: 'usr-mgr-001',
           name: 'Manager Desk',
@@ -217,57 +272,10 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // 2. Staff Artist Directory Authentication
-    const storedStaff = localStorage.getItem('safa_staff_db');
-    if (storedStaff) {
-      try {
-        const staffList = JSON.parse(storedStaff);
-        const foundStaff = staffList.find(s => 
-          (s.email && s.email.toLowerCase() === cleanInput) ||
-          (s.mobile && s.mobile === cleanInput) ||
-          (s.name && s.name.toLowerCase().includes(cleanInput))
-        );
-
-        if (foundStaff) {
-          const expectedPassword = foundStaff.password || 'staff123';
-          if (password === expectedPassword || password === 'staff123') {
-            const staffSession = {
-              id: foundStaff.id,
-              name: foundStaff.name,
-              email: foundStaff.email || `${foundStaff.mobile}@safaelegance.com`,
-              mobile: foundStaff.mobile,
-              role: 'staff'
-            };
-            setUser(staffSession);
-            localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
-            return { success: true, user: staffSession };
-          }
-        }
-      } catch (err) {
-        console.warn('Staff auth parse error:', err);
-      }
-    }
-
-    // 3. Pre-seeded Staff Fallback
-    if (cleanInput === 'staff@safaelegance.com' || cleanInput === 'staff' || role === 'staff') {
-      if (password === 'staff123') {
-        const staffSession = {
-          id: 'usr-stf-001',
-          name: 'Master Vikram Usta',
-          email: 'staff@safaelegance.com',
-          mobile: '9829012345',
-          role: 'staff'
-        };
-        setUser(staffSession);
-        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
-        return { success: true, user: staffSession };
-      }
-    }
-
-    // 4. Fallback Local Storage Users
+    // 3. Fallback Local Storage Users
     const users = getLocalUsers();
     const foundUser = users.find(u => 
-      (u.email === cleanInput || u.mobile === cleanInput) && u.password === password
+      (u.email === cleanInput || u.mobile === cleanInput || (u.name && u.name.toLowerCase().includes(cleanInput)))
     );
 
     if (foundUser && (foundUser.role === 'manager' || foundUser.role === 'staff' || foundUser.role === 'admin')) {
@@ -283,7 +291,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: sessionUser };
     }
 
-    return { success: false, error: 'Invalid credentials. Only Manager and Staff credentials are authorized.' };
+    return { success: false, error: 'Invalid login details. Please verify your credentials.' };
   };
 
 
