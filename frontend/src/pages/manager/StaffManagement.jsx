@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchStaffMembers, addStaffMember, updateStaffMember, deleteStaffMember } from '@backend/services/bookingService';
-import { Plus, Phone, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Plus, Phone, Edit2, Trash2, X, Save, Mail } from 'lucide-react';
 
 const StaffManagement = () => {
   const [staffList, setStaffList] = useState([]);
@@ -11,6 +11,7 @@ const StaffManagement = () => {
 
   const [form, setForm] = useState({
     name: '',
+    email: '',
     mobile: '',
     experience: '5+ Years',
     address: '',
@@ -32,6 +33,7 @@ const StaffManagement = () => {
     setEditingStaff(null);
     setForm({
       name: '',
+      email: '',
       mobile: '',
       password: 'staff123',
       experience: '5+ Years',
@@ -46,6 +48,7 @@ const StaffManagement = () => {
     setEditingStaff(stf);
     setForm({
       name: stf.name || '',
+      email: stf.email || '',
       mobile: stf.mobile || '',
       password: stf.password || 'staff123',
       experience: stf.experience || '5+ Years',
@@ -55,6 +58,7 @@ const StaffManagement = () => {
     });
     setModalOpen(true);
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -128,6 +132,12 @@ const StaffManagement = () => {
                         <Phone className="w-3.5 h-3.5 inline" />
                         <span>{stf.mobile}</span>
                       </p>
+                      {stf.email && (
+                        <p className="text-[11px] text-slate-400 flex items-center space-x-1.5 mt-0.5">
+                          <Mail className="w-3 h-3 text-slate-400 inline" />
+                          <span>{stf.email}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -151,6 +161,7 @@ const StaffManagement = () => {
 
                 {/* Info & Skills */}
                 <div className="text-xs space-y-2 text-slate-300">
+                  {stf.email && <p><strong className="text-slate-100">Email:</strong> {stf.email}</p>}
                   <p><strong className="text-slate-100">Experience:</strong> {stf.experience || '5+ Years'}</p>
                   <p><strong className="text-slate-100">Address:</strong> {stf.address || 'Rajasthan Central'}</p>
                   <div>
@@ -214,6 +225,17 @@ const StaffManagement = () => {
                 />
               </div>
 
+              <div>
+                <label className="block font-bold text-slate-300 uppercase mb-1">Email Address (Optional)</label>
+                <input
+                  type="email"
+                  placeholder="e.g. artist@safaelegance.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-300 uppercase mb-1">Mobile Number *</label>
@@ -238,6 +260,7 @@ const StaffManagement = () => {
                   />
                 </div>
               </div>
+
 
               <div>
                 <label className="block font-bold text-slate-300 uppercase mb-1">Experience Level</label>

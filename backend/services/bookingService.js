@@ -72,6 +72,21 @@ const saveLocalServices = (services) => {
 };
 
 
+const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+const updateBookingInSupabase = async (bookingId, payload) => {
+  if (!isSupabaseConfigured || !supabase || !bookingId) return;
+  try {
+    if (isUUID(bookingId)) {
+      await supabase.from('bookings').update(payload).eq('id', bookingId);
+    } else {
+      await supabase.from('bookings').update(payload).eq('tracking_id', bookingId);
+    }
+  } catch (err) {
+    console.warn('Supabase booking update fallback:', err);
+  }
+};
+
 const getLocalStaff = () => {
   const stored = safeLocalStorage.getItem(LOCAL_STAFF_KEY);
   if (!stored) {
@@ -79,6 +94,7 @@ const getLocalStaff = () => {
       {
         id: 'stf-1',
         name: 'Master Vikram Usta',
+        email: 'vikram@safaelegance.com',
         mobile: '9829012345',
         experience: '12 Years',
         address: 'Pink City Heritage Ward 3, Jaipur',
@@ -89,6 +105,7 @@ const getLocalStaff = () => {
       {
         id: 'stf-2',
         name: 'Karan Singh Rathore',
+        email: 'karan@safaelegance.com',
         mobile: '9829098765',
         experience: '8 Years',
         address: 'Lake Palace Gate Road, Udaipur',
@@ -102,6 +119,7 @@ const getLocalStaff = () => {
   }
   return JSON.parse(stored);
 };
+
 
 const saveLocalStaff = (staffList) => {
   safeLocalStorage.setItem(LOCAL_STAFF_KEY, JSON.stringify(staffList));
@@ -396,6 +414,7 @@ export const fetchStaffMembers = async () => {
 export const addStaffMember = async (staffData) => {
   const newStaffPayload = {
     name: staffData.name,
+    email: staffData.email || '',
     mobile: staffData.mobile,
     password: staffData.password || 'staff123',
     experience: staffData.experience || '5+ Years',
@@ -403,6 +422,7 @@ export const addStaffMember = async (staffData) => {
     skills: typeof staffData.skills === 'string' ? staffData.skills.split(',').map(s => s.trim()) : (staffData.skills || ['Safa Tying']),
     profile_photo: staffData.profile_photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80'
   };
+
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -484,13 +504,8 @@ export const assignStaffToBooking = async (bookingId, staffId) => {
       status: 'Staff Assigned'
     };
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('bookings').update(updatePayload).or(`id.eq.${bookingObj.id},tracking_id.eq.${bookingObj.tracking_id}`);
-      } catch (err) {
-        console.warn('Supabase assign staff fallback:', err);
-      }
-    }
+    await updateBookingInSupabase(bookingObj.id || bookingObj.tracking_id, updatePayload);
+
 
     const localBookings = getLocalBookings();
     const idx = localBookings.findIndex(b => b.id === bookingObj.id || b.tracking_id === bookingObj.tracking_id);
@@ -515,13 +530,7 @@ export const removeStaffAssignment = async (bookingId) => {
     status: 'Confirmed'
   };
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('bookings').update(resetPayload).or(`id.eq.${bookingId},tracking_id.eq.${bookingId}`);
-    } catch (err) {
-      console.warn('Supabase remove staff assignment fallback:', err);
-    }
-  }
+  await updateBookingInSupabase(bookingId, resetPayload);
 
   const bookings = getLocalBookings();
   const bookingIdx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);
@@ -553,13 +562,7 @@ export const updateStaffEventWorkflow = async (bookingId, action) => {
   if (action === 'start') newStatus = 'In Progress';
   if (action === 'complete') newStatus = 'Completed';
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('bookings').update({ status: newStatus }).or(`id.eq.${bookingId},tracking_id.eq.${bookingId}`);
-    } catch (err) {
-      console.warn('Supabase workflow update fallback:', err);
-    }
-  }
+  await updateBookingInSupabase(bookingId, { status: newStatus });
 
   const bookings = getLocalBookings();
   const idx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);
@@ -589,6 +592,7 @@ export const createBooking = async (bookingData) => {
   const newBookingPayload = {
     tracking_id: trackingId,
     customer_name: bookingData.customerName,
+    customer_email: bookingData.customerEmail || '',
     customer_mobile: bookingData.customerMobile,
     customer_alt_mobile: bookingData.customerAltMobile || '',
     venue: bookingData.venue,
@@ -661,16 +665,7 @@ export const fetchAllBookings = async () => {
 };
 
 export const updateBookingStatus = async (bookingId, newStatus) => {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase
-        .from('bookings')
-        .update({ status: newStatus })
-        .or(`id.eq.${bookingId},tracking_id.eq.${bookingId}`);
-    } catch (err) {
-      console.warn('Supabase update status fallback:', err);
-    }
-  }
+  await updateBookingInSupabase(bookingId, { status: newStatus });
 
   const bookings = getLocalBookings();
   const idx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);
@@ -687,16 +682,8 @@ export const updateBookingStatus = async (bookingId, newStatus) => {
 };
 
 export const updateBookingDetails = async (bookingId, updatedFields) => {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase
-        .from('bookings')
-        .update(updatedFields)
-        .or(`id.eq.${bookingId},tracking_id.eq.${bookingId}`);
-    } catch (err) {
-      console.warn('Supabase update booking details fallback:', err);
-    }
-  }
+  await updateBookingInSupabase(bookingId, updatedFields);
+
 
   const bookings = getLocalBookings();
   const idx = bookings.findIndex(b => b.id === bookingId || b.tracking_id === bookingId);

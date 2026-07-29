@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBooking } from '../../context/BookingContext';
-import { User, Phone, PhoneCall, ArrowRight } from 'lucide-react';
+import { User, Phone, PhoneCall, ArrowRight, Mail } from 'lucide-react';
+
 
 const Step1Customer = () => {
   const { customerDetails, setCustomerDetails, setStep } = useBooking();
@@ -78,6 +79,23 @@ const Step1Customer = () => {
           {errors.mobile && <p className="text-xs text-red-400 mt-1.5">{errors.mobile}</p>}
         </div>
 
+        {/* Email Address */}
+        <div>
+          <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+            Email Address (Optional)
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-amber-400/70" />
+            <input
+              type="email"
+              placeholder="e.g. customer@example.com"
+              value={customerDetails.email || ''}
+              onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+              className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500 text-sm text-slate-100 rounded-xl py-3 pl-11 pr-4 focus:outline-none transition-all"
+            />
+          </div>
+        </div>
+
         {/* Alternate Mobile */}
         <div>
           <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
@@ -94,6 +112,7 @@ const Step1Customer = () => {
             />
           </div>
         </div>
+
 
         {/* Action Button */}
         <div className="pt-4 flex justify-end">
