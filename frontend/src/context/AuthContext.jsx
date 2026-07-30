@@ -281,8 +281,8 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: 'Staff member not found. Please check your Name/Mobile.' };
     }
 
-    // 2. Manager Portal Security Authentication (Strict Supabase manager Table Check)
-    if (role === 'manager' || cleanInput.includes('manager')) {
+    // 2. Manager Portal Security Authentication (Strict Zero-Default Supabase Check)
+    if (role === 'manager' || cleanInput.includes('manager') || cleanInput.includes('@')) {
       let managerList = [];
 
       // 2a. Query Supabase 'manager' table directly
@@ -297,15 +297,12 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      let validManagerEmail = 'manager@safaelegance.com';
-      let validManagerPassword = 'manager123';
-
       // If Supabase manager table records exist, validate strictly against them
       if (managerList.length > 0) {
         const foundManager = managerList.find(m => {
           const mEmail = (m.email || '').toLowerCase().trim();
           const mMobile = (m.mobile || '').trim();
-          return mEmail === cleanInput || mMobile === cleanInput || cleanInput === 'manager';
+          return mEmail === cleanInput || mMobile === cleanInput;
         });
 
         if (foundManager) {
@@ -328,7 +325,10 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      // Fallback check against website settings if Supabase is offline
+      // Fallback check against local website settings if Supabase is offline
+      let validManagerEmail = '';
+      let validManagerPassword = '';
+
       try {
         const storedSettings = localStorage.getItem('safa_website_settings');
         if (storedSettings) {
@@ -338,33 +338,25 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (e) {}
 
-      const isIdMatched =
-        cleanInput === validManagerEmail ||
-        cleanInput === 'manager@safaelegance.com' ||
-        cleanInput === 'manager';
+      if (validManagerEmail && validManagerPassword) {
+        const isIdMatched = cleanInput === validManagerEmail;
+        const isPasswordMatched = cleanPin === validManagerPassword;
 
-      const isPasswordMatched = cleanPin === validManagerPassword;
-
-      if (isIdMatched && isPasswordMatched) {
-        const managerSession = {
-          id: 'usr-mgr-001',
-          name: 'Manager Desk',
-          email: validManagerEmail,
-          mobile: '7011548343',
-          role: 'manager'
-        };
-        setUser(managerSession);
-        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(managerSession));
-        return { success: true, user: managerSession };
+        if (isIdMatched && isPasswordMatched) {
+          const managerSession = {
+            id: 'usr-mgr-001',
+            name: 'Manager Desk',
+            email: validManagerEmail,
+            mobile: '7011548343',
+            role: 'manager'
+          };
+          setUser(managerSession);
+          localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(managerSession));
+          return { success: true, user: managerSession };
+        }
       }
 
-      if (!isIdMatched) {
-        return { success: false, error: 'Invalid Manager ID or Email Address.' };
-      }
-
-      if (!isPasswordMatched) {
-        return { success: false, error: 'Incorrect Manager Password. Access Denied.' };
-      }
+      return { success: false, error: 'Invalid Manager ID or Password. Credentials do not match Supabase manager table.' };
     }
 
     return { success: false, error: 'Invalid portal login credentials.' };
