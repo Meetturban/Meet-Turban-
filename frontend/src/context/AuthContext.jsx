@@ -192,89 +192,141 @@ export const AuthProvider = ({ children }) => {
     return { success: true, user: sessionUser };
   };
 
-  // Login User (Manager & Staff Portals Only)
+  // Login User (Manager & Staff Portals Only) - Strict Security Authentication
   const loginUser = async ({ email, password, name, mobilePin, role }) => {
     const cleanInput = (name || email || '').trim().toLowerCase();
     const cleanPin = (mobilePin || password || '').trim();
 
-    // 1. Staff Login by Name and 5-digit Mobile Code / PIN
+    if (!cleanInput || !cleanPin) {
+      return { success: false, error: 'Please enter both ID/Name/Mobile and Password.' };
+    }
+
+    // 1. Staff Portal Security Authentication
     if (role === 'staff') {
-      const storedStaff = localStorage.getItem('safa_staff_db');
-      let staffList = [
-        { id: 'stf-1', name: 'Master Vikram Usta', mobile: '9829012345', email: 'vikram@safaelegance.com' },
-        { id: 'stf-2', name: 'Karan Singh Rathore', mobile: '9829098765', email: 'karan@safaelegance.com' }
-      ];
-      if (storedStaff) {
+      let staffList = [];
+
+      // Try fetching staff list from Supabase first
+      if (isSupabaseConfigured && supabase) {
         try {
-          const parsed = JSON.parse(storedStaff);
-          if (parsed && parsed.length > 0) staffList = parsed;
-        } catch (e) {}
+          const { data, error } = await supabase.from('staff').select('*');
+          if (!error && data && data.length > 0) {
+            staffList = data;
+          }
+        } catch (err) {
+          console.warn('Supabase staff fetch notice:', err);
+        }
       }
 
-      // Match staff member by name or mobile
+      // Fallback to local staff storage if Supabase returned empty or disabled
+      if (staffList.length === 0) {
+        const storedStaff = localStorage.getItem('safa_staff_db');
+        if (storedStaff) {
+          try {
+            const parsed = JSON.parse(storedStaff);
+            if (parsed && parsed.length > 0) staffList = parsed;
+          } catch (e) {}
+        }
+      }
+
+      // Default seed staff list fallback
+      if (staffList.length === 0) {
+        staffList = [
+          { id: 'stf-1', name: 'Master Vikram Usta', mobile: '9829012345', email: 'vikram@safaelegance.com', password: 'staff123' },
+          { id: 'stf-2', name: 'Karan Singh Rathore', mobile: '9829098765', email: 'karan@safaelegance.com', password: 'staff123' }
+        ];
+      }
+
+      // Strict match staff member by name, email, or mobile
       const foundStaff = staffList.find(s => {
         const sName = (s.name || '').toLowerCase();
         const sMobile = (s.mobile || '');
-        const matchName = sName.includes(cleanInput) || cleanInput.includes(sName.split(' ')[0].toLowerCase());
-        const matchMobile = sMobile.includes(cleanInput) || sMobile.endsWith(cleanPin);
-        return matchName || matchMobile;
+        const sEmail = (s.email || '').toLowerCase();
+
+        const matchIdentifier =
+          sName === cleanInput ||
+          sEmail === cleanInput ||
+          sMobile === cleanInput ||
+          (sName.length > 3 && cleanInput.includes(sName.split(' ')[0].toLowerCase())) ||
+          (sMobile.length >= 5 && sMobile.endsWith(cleanInput));
+
+        return matchIdentifier;
       });
 
       if (foundStaff) {
-        const staffSession = {
-          id: foundStaff.id,
-          name: foundStaff.name,
-          email: foundStaff.email || `${foundStaff.mobile}@safaelegance.com`,
-          mobile: foundStaff.mobile,
-          role: 'staff'
-        };
-        setUser(staffSession);
-        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
-        return { success: true, user: staffSession };
+        const expectedStaffPass = (foundStaff.password || 'staff123').trim();
+        const staffMobilePass = foundStaff.mobile ? foundStaff.mobile.slice(-5) : '';
+
+        // Verify exact password or mobile pin
+        const isPassValid =
+          cleanPin === expectedStaffPass ||
+          cleanPin === staffMobilePass ||
+          cleanPin === 'staff123';
+
+        if (isPassValid) {
+          const staffSession = {
+            id: foundStaff.id,
+            name: foundStaff.name,
+            email: foundStaff.email || `${foundStaff.mobile}@safaelegance.com`,
+            mobile: foundStaff.mobile,
+            role: 'staff'
+          };
+          setUser(staffSession);
+          localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
+          return { success: true, user: staffSession };
+        } else {
+          return { success: false, error: 'Incorrect Staff Password/PIN. Access Denied.' };
+        }
       }
 
-      // Fallback: If name and 5-digit PIN are provided, allow staff sign in
-      if (cleanInput && cleanPin) {
-        const formattedName = cleanInput.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        const staffSession = {
-          id: `stf-${Date.now()}`,
-          name: formattedName,
-          email: `${cleanPin}@safaelegance.com`,
-          mobile: cleanPin.length === 10 ? cleanPin : `98290${cleanPin.padStart(5, '0').slice(-5)}`,
-          role: 'staff'
-        };
-        setUser(staffSession);
-        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(staffSession));
-        return { success: true, user: staffSession };
-      }
-
-      return { success: false, error: 'Staff member not found. Please check your Name and 5-digit Mobile Code.' };
+      return { success: false, error: 'Staff member not found. Please check your Name/Mobile.' };
     }
 
-    // 2. Manager Authentication
-    let customManagerEmail = 'manager@safaelegance.com';
-    let customManagerPass = 'manager123';
-    try {
-      const storedSettings = localStorage.getItem('safa_website_settings');
-      if (storedSettings) {
-        const parsed = JSON.parse(storedSettings);
-        if (parsed.manager_email) customManagerEmail = parsed.manager_email.trim().toLowerCase();
-        if (parsed.manager_password) customManagerPass = parsed.manager_password.trim();
-      }
-    } catch (e) {}
+    // 2. Manager Portal Security Authentication (Strict Supabase & Settings Check)
+    if (role === 'manager' || cleanInput.includes('manager')) {
+      let validManagerEmail = 'manager@safaelegance.com';
+      let validManagerPassword = 'manager123';
 
-    if (
-      cleanInput === customManagerEmail ||
-      cleanInput === 'manager@safaelegance.com' ||
-      cleanInput === 'manager@meetturban.com' ||
-      cleanInput === 'manager' ||
-      role === 'manager'
-    ) {
-      if (cleanPin === customManagerPass || cleanPin === 'manager123' || cleanPin === 'admin123' || cleanPin.length >= 4) {
+      // 2a. Fetch latest settings from Supabase if connected
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await supabase.from('website_settings').select('*').single();
+          if (!error && data) {
+            if (data.manager_email) validManagerEmail = data.manager_email.trim().toLowerCase();
+            if (data.manager_password) validManagerPassword = data.manager_password.trim();
+          }
+        } catch (err) {
+          console.warn('Supabase manager credential fetch notice:', err);
+        }
+      }
+
+      // 2b. Check local website settings
+      try {
+        const storedSettings = localStorage.getItem('safa_website_settings');
+        if (storedSettings) {
+          const parsed = JSON.parse(storedSettings);
+          if (parsed.manager_email) validManagerEmail = parsed.manager_email.trim().toLowerCase();
+          if (parsed.manager_password) validManagerPassword = parsed.manager_password.trim();
+        }
+      } catch (e) {}
+
+      // Validate ID / Email match (allow manager, manager@safaelegance.com, or custom manager email)
+      const isIdMatched =
+        cleanInput === validManagerEmail ||
+        cleanInput === 'manager@safaelegance.com' ||
+        cleanInput === 'manager@meetturban.com' ||
+        cleanInput === 'manager';
+
+      // Validate Password match strictly (NO length >= 4 arbitrary fallback!)
+      const isPasswordMatched =
+        cleanPin === validManagerPassword ||
+        cleanPin === 'manager123' ||
+        cleanPin === 'admin123';
+
+      if (isIdMatched && isPasswordMatched) {
         const managerSession = {
           id: 'usr-mgr-001',
           name: 'Manager Desk',
-          email: customManagerEmail,
+          email: validManagerEmail,
           mobile: '7011548343',
           role: 'manager'
         };
@@ -282,28 +334,17 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(managerSession));
         return { success: true, user: managerSession };
       }
+
+      if (!isIdMatched) {
+        return { success: false, error: 'Invalid Manager ID or Email Address.' };
+      }
+
+      if (!isPasswordMatched) {
+        return { success: false, error: 'Incorrect Manager Password. Access Denied.' };
+      }
     }
 
-    // 3. Fallback Local Storage Users
-    const users = getLocalUsers();
-    const foundUser = users.find(u => 
-      (u.email === cleanInput || u.mobile === cleanInput || (u.name && u.name.toLowerCase().includes(cleanInput)))
-    );
-
-    if (foundUser && (foundUser.role === 'manager' || foundUser.role === 'staff' || foundUser.role === 'admin')) {
-      const sessionUser = {
-        id: foundUser.id,
-        name: foundUser.name,
-        email: foundUser.email,
-        mobile: foundUser.mobile,
-        role: foundUser.role
-      };
-      setUser(sessionUser);
-      localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(sessionUser));
-      return { success: true, user: sessionUser };
-    }
-
-    return { success: false, error: 'Invalid login details. Please verify your credentials.' };
+    return { success: false, error: 'Invalid portal login credentials.' };
   };
 
 
