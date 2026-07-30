@@ -14,7 +14,9 @@ const DEFAULT_SETTINGS = {
   instagram_url: 'https://instagram.com/meetturban',
   facebook_url: 'https://facebook.com/meetturban',
   twitter_url: 'https://x.com/meetturban',
-  youtube_url: 'https://youtube.com/@meetturban'
+  youtube_url: 'https://youtube.com/@meetturban',
+  manager_email: 'manager@safaelegance.com',
+  manager_password: 'manager123'
 };
 
 export const SettingsProvider = ({ children }) => {

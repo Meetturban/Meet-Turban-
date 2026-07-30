@@ -252,18 +252,30 @@ export const AuthProvider = ({ children }) => {
     }
 
     // 2. Manager Authentication
+    let customManagerEmail = 'manager@safaelegance.com';
+    let customManagerPass = 'manager123';
+    try {
+      const storedSettings = localStorage.getItem('safa_website_settings');
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings);
+        if (parsed.manager_email) customManagerEmail = parsed.manager_email.trim().toLowerCase();
+        if (parsed.manager_password) customManagerPass = parsed.manager_password.trim();
+      }
+    } catch (e) {}
+
     if (
+      cleanInput === customManagerEmail ||
       cleanInput === 'manager@safaelegance.com' ||
       cleanInput === 'manager@meetturban.com' ||
       cleanInput === 'manager' ||
       role === 'manager'
     ) {
-      if (cleanPin === 'manager123' || cleanPin === 'admin123' || cleanPin.length >= 4) {
+      if (cleanPin === customManagerPass || cleanPin === 'manager123' || cleanPin === 'admin123' || cleanPin.length >= 4) {
         const managerSession = {
           id: 'usr-mgr-001',
           name: 'Manager Desk',
-          email: 'manager@safaelegance.com',
-          mobile: '9876543210',
+          email: customManagerEmail,
+          mobile: '7011548343',
           role: 'manager'
         };
         setUser(managerSession);

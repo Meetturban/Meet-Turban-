@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchServices } from '@backend/services/bookingService';
 import ServiceCard from '../components/services/ServiceCard';
 import ServiceDetailModal from '../components/services/ServiceDetailModal';
-import { Search, Sparkles, Filter } from 'lucide-react';
+import { useBooking } from '../context/BookingContext';
+import { Search, Sparkles, Filter, ArrowRight, ShoppingBag } from 'lucide-react';
 
 const ServicesPage = () => {
+  const { selectedServices, totalAmount } = useBooking();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -121,6 +124,33 @@ const ServicesPage = () => {
           service={selectedModalService}
           onClose={() => setSelectedModalService(null)}
         />
+      )}
+
+      {/* Floating "Next: Proceed to Booking" Sticky Action Bar */}
+      {selectedServices.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-2xl bg-slate-950/90 border border-amber-500/40 backdrop-blur-2xl p-4 rounded-3xl shadow-2xl shadow-amber-500/20 animate-fade-in flex items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl gold-gradient-bg text-slate-950 flex items-center justify-center font-black text-sm shadow-md">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] text-amber-300 font-extrabold uppercase tracking-widest block">
+                {selectedServices.reduce((sum, s) => sum + s.quantity, 0)} Services Selected
+              </span>
+              <span className="text-base font-black text-slate-100">
+                Total: ₹{Number(totalAmount).toLocaleString('en-IN')}
+              </span>
+            </div>
+          </div>
+
+          <Link
+            to="/book"
+            className="gold-gradient-bg text-slate-950 font-black text-xs sm:text-sm px-6 py-3 rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center space-x-2 shrink-0"
+          >
+            <span>Next: Proceed to Booking</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       )}
 
     </div>

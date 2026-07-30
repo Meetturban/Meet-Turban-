@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { useSettings } from '../../context/SettingsContext';
-import { Globe, Share2, Save, CheckCircle2 } from 'lucide-react';
+import { Globe, Share2, Save, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 const WebsiteSettingsCMS = () => {
   const { settings, updateSettings } = useSettings();
 
   const [form, setForm] = useState({
-    business_name: settings.business_name || 'Safa Elegance',
-    contact_phone: settings.contact_phone || '9876543210',
-    whatsapp_number: settings.whatsapp_number || '919876543210',
-    business_address: settings.business_address || 'Heritage Palace Road, Jaipur, Rajasthan',
+    business_name: settings.business_name || 'MEET TURBAN',
+    contact_phone: settings.contact_phone || '7011548343',
+    whatsapp_number: settings.whatsapp_number || '7011548343',
+    business_address: settings.business_address || 'DESHRAJ GARDEN DELHI',
     logo_url: settings.logo_url || '',
-    instagram_url: settings.instagram_url || 'https://instagram.com/safaelegance',
-    facebook_url: settings.facebook_url || 'https://facebook.com/safaelegance',
-    twitter_url: settings.twitter_url || 'https://x.com/safaelegance',
-    youtube_url: settings.youtube_url || 'https://youtube.com/@safaelegance'
+    instagram_url: settings.instagram_url || 'https://instagram.com/meetturban',
+    facebook_url: settings.facebook_url || 'https://facebook.com/meetturban',
+    twitter_url: settings.twitter_url || 'https://x.com/meetturban',
+    youtube_url: settings.youtube_url || 'https://youtube.com/@meetturban',
+    manager_email: settings.manager_email || 'manager@safaelegance.com',
+    manager_password: settings.manager_password || 'manager123'
   });
 
   const [savedMessage, setSavedMessage] = useState('');
@@ -164,13 +166,49 @@ const WebsiteSettingsCMS = () => {
           </div>
         </div>
 
+        {/* Manager Security & Login Credentials Section */}
+        <div className="glass-panel p-8 rounded-3xl border border-amber-500/30 space-y-6">
+          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-2 border-b border-slate-800 pb-3">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Manager Account Credentials (Supabase Synced)</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-300 uppercase mb-1.5">Manager ID / Email Address</label>
+              <input
+                type="text"
+                value={form.manager_email}
+                onChange={(e) => setForm({ ...form, manager_email: e.target.value })}
+                placeholder="manager@safaelegance.com"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 text-slate-100 rounded-xl py-3 px-3 focus:outline-none transition-all"
+                required
+              />
+              <span className="text-[10px] text-slate-500 mt-1 block">Used by Manager to sign into the Manager Dashboard</span>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-300 uppercase mb-1.5">Manager Password</label>
+              <input
+                type="text"
+                value={form.manager_password}
+                onChange={(e) => setForm({ ...form, manager_password: e.target.value })}
+                placeholder="••••••••"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 text-slate-100 rounded-xl py-3 px-3 focus:outline-none transition-all"
+                required
+              />
+              <span className="text-[10px] text-slate-500 mt-1 block">Manager security key for login access</span>
+            </div>
+          </div>
+        </div>
+
         {/* Save Button */}
         <button
           type="submit"
           className="gold-gradient-bg text-slate-950 font-black text-sm px-8 py-4 rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-105 transition-all flex items-center space-x-2"
         >
           <Save className="w-5 h-5" />
-          <span>Save Website Settings & Social Links</span>
+          <span>Save Website Settings & Manager Credentials</span>
         </button>
 
       </form>

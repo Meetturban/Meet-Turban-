@@ -31,40 +31,40 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 glass-panel border-b border-amber-500/20 shadow-2xl bg-slate-950/90 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+      <header className="sticky top-0 z-40 px-3 sm:px-6 lg:px-8 pt-3 pb-2 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between h-16 px-4 rounded-full bg-slate-950/80 backdrop-blur-2xl border border-amber-500/25 shadow-2xl shadow-amber-500/5 transition-all duration-300 ease-out hover:border-amber-500/40">
 
             {/* Brand Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/" className="flex items-center space-x-2.5 group">
               {settings.logo_url ? (
-                <img src={settings.logo_url} alt={settings.business_name} className="w-11 h-11 object-contain rounded-xl" />
+                <img src={settings.logo_url} alt={settings.business_name} className="w-9 h-9 object-contain rounded-xl" />
               ) : (
-                <div className="w-11 h-11 rounded-xl gold-gradient-bg flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
-                  <Crown className="w-6 h-6 text-slate-950" />
+                <div className="w-9 h-9 rounded-xl gold-gradient-bg flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <Crown className="w-5 h-5 text-slate-950" />
                 </div>
               )}
               <div>
-                <span className="text-xl font-bold tracking-wider gold-gradient-text block uppercase">
+                <span className="text-base font-black tracking-wider gold-gradient-text block uppercase leading-tight">
                   {settings.business_name || 'MEET TURBAN'}
                 </span>
-                <span className="text-[10px] text-amber-300/70 tracking-widest block uppercase font-medium">
+                <span className="text-[9px] text-amber-300/70 tracking-widest block uppercase font-semibold">
                   Royal Wedding Services
                 </span>
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center space-x-8">
+            {/* Desktop Navigation Links - Apple Dynamic Capsule Pills */}
+            <nav className="hidden md:flex items-center space-x-1.5 bg-slate-900/60 p-1.5 rounded-full border border-slate-800/80">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path;
                 return (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`text-sm font-semibold transition-colors duration-200 ${isActive
-                        ? 'text-amber-400 border-b-2 border-amber-400 pb-1'
-                        : 'text-slate-300 hover:text-amber-300'
+                    className={`text-xs font-semibold px-4 py-2 rounded-full transition-all duration-300 ease-out active:scale-95 ${isActive
+                        ? 'gold-gradient-bg text-slate-950 font-bold shadow-lg shadow-amber-500/20 scale-105'
+                        : 'text-slate-300 hover:text-amber-300 hover:bg-slate-800/60'
                       }`}
                   >
                     {link.label}
@@ -75,26 +75,26 @@ const Navbar = () => {
               {(user?.role === 'manager' || user?.role === 'admin') && (
                 <Link
                   to="/manager"
-                  className="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl hover:bg-amber-500/20 transition-all flex items-center space-x-1.5"
+                  className="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 rounded-full hover:bg-amber-500/20 transition-all active:scale-95 flex items-center space-x-1.5"
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Manager Portal</span>
+                  <span>Manager</span>
                 </Link>
               )}
 
               {user?.role === 'staff' && (
                 <Link
                   to="/staff"
-                  className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl hover:bg-emerald-500/20 transition-all flex items-center space-x-1.5"
+                  className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-full hover:bg-emerald-500/20 transition-all active:scale-95 flex items-center space-x-1.5"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
-                  <span>Staff Portal</span>
+                  <span>Staff</span>
                 </Link>
               )}
             </nav>
 
             {/* Header Quick Actions & Auth */}
-            <div className="hidden lg:flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-3">
 
               {/* Quick Track Input */}
               <form onSubmit={handleQuickTrack} className="relative">
@@ -103,23 +103,23 @@ const Navbar = () => {
                   placeholder="Tracking ID (SAFA-...)"
                   value={quickTrackingId}
                   onChange={(e) => setQuickTrackingId(e.target.value)}
-                  className="w-44 bg-slate-900/90 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 rounded-full py-2 pl-3 pr-8 focus:outline-none focus:border-amber-500/50 transition-all"
+                  className="w-40 bg-slate-900/90 border border-slate-800 text-[11px] text-slate-200 placeholder-slate-500 rounded-full py-1.5 pl-3 pr-7 focus:outline-none focus:border-amber-500/60 transition-all duration-300"
                 />
                 <button
                   type="submit"
                   aria-label="Search Tracking ID"
-                  className="absolute right-2 top-2 text-slate-400 hover:text-amber-400 transition-colors"
+                  className="absolute right-2 top-1.5 text-slate-400 hover:text-amber-400 transition-colors"
                 >
-                  <Search className="w-4 h-4" />
+                  <Search className="w-3.5 h-3.5" />
                 </button>
               </form>
 
               {/* Auth Buttons */}
               {user ? (
-                <div className="flex items-center space-x-3 pl-2 border-l border-slate-800">
+                <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
                   <Link
                     to={user.role === 'staff' ? '/staff' : '/manager'}
-                    className="flex items-center space-x-2 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-full hover:bg-amber-500/20 transition-all"
+                    className="flex items-center space-x-1.5 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full hover:bg-amber-500/20 transition-all active:scale-95"
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>{user.name.split(' ')[0]}</span>
@@ -127,16 +127,16 @@ const Navbar = () => {
                   <button
                     onClick={logout}
                     title="Logout"
-                    className="p-2 rounded-full text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors"
+                    className="p-1.5 rounded-full text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <Link
                     to="/login"
-                    className="text-xs font-bold text-slate-950 gold-gradient-bg px-4 py-2 rounded-full shadow-md shadow-amber-500/20 hover:scale-105 transition-transform flex items-center space-x-1.5"
+                    className="text-xs font-bold text-slate-950 gold-gradient-bg px-4 py-1.5 rounded-full shadow-md shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center space-x-1.5"
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>Portal Sign In</span>
