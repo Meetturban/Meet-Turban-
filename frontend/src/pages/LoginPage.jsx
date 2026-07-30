@@ -149,6 +149,7 @@ const LoginPage = () => {
               <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-amber-400/70" />
               <input
                 type="password"
+                maxLength={128}
                 placeholder={
                   activeTab === 'manager'
                     ? '••••••••'
