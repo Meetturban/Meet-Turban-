@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSettings } from '../../context/SettingsContext';
+import { supabase, isSupabaseConfigured } from '@backend/lib/supabase';
 import { Globe, Share2, Save, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 const WebsiteSettingsCMS = () => {
@@ -24,7 +25,25 @@ const WebsiteSettingsCMS = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await updateSettings(form);
-    setSavedMessage('Website Settings & Social Links updated successfully across entire platform.');
+
+    // Sync credentials to Supabase manager table
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('manager').upsert([
+          {
+            email: form.manager_email.trim().toLowerCase(),
+            password: form.manager_password.trim(),
+            name: 'Manager Desk',
+            mobile: form.contact_phone || '7011548343',
+            role: 'manager'
+          }
+        ], { onConflict: 'email' });
+      } catch (err) {
+        console.warn('Supabase manager table sync notice:', err);
+      }
+    }
+
+    setSavedMessage('Website Settings & Manager Credentials updated in Supabase successfully!');
     setTimeout(() => setSavedMessage(''), 4000);
   };
 

@@ -281,25 +281,54 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: 'Staff member not found. Please check your Name/Mobile.' };
     }
 
-    // 2. Manager Portal Security Authentication (Strict Supabase & Settings Check)
+    // 2. Manager Portal Security Authentication (Strict Supabase manager Table Check)
     if (role === 'manager' || cleanInput.includes('manager')) {
-      let validManagerEmail = 'manager@safaelegance.com';
-      let validManagerPassword = 'manager123';
+      let managerList = [];
 
-      // 2a. Fetch latest settings from Supabase if connected
+      // 2a. Query Supabase 'manager' table directly
       if (isSupabaseConfigured && supabase) {
         try {
-          const { data, error } = await supabase.from('website_settings').select('*').single();
-          if (!error && data) {
-            if (data.manager_email) validManagerEmail = data.manager_email.trim().toLowerCase();
-            if (data.manager_password) validManagerPassword = data.manager_password.trim();
+          const { data, error } = await supabase.from('manager').select('*');
+          if (!error && data && data.length > 0) {
+            managerList = data;
           }
         } catch (err) {
-          console.warn('Supabase manager credential fetch notice:', err);
+          console.warn('Supabase manager table fetch notice:', err);
         }
       }
 
-      // 2b. Check local website settings
+      let validManagerEmail = 'manager@safaelegance.com';
+      let validManagerPassword = 'manager123';
+
+      // If Supabase manager table records exist, validate strictly against them
+      if (managerList.length > 0) {
+        const foundManager = managerList.find(m => {
+          const mEmail = (m.email || '').toLowerCase().trim();
+          const mMobile = (m.mobile || '').trim();
+          return mEmail === cleanInput || mMobile === cleanInput || cleanInput === 'manager';
+        });
+
+        if (foundManager) {
+          if (cleanPin === (foundManager.password || '').trim()) {
+            const managerSession = {
+              id: foundManager.id || 'usr-mgr-001',
+              name: foundManager.name || 'Manager Desk',
+              email: foundManager.email,
+              mobile: foundManager.mobile || '7011548343',
+              role: 'manager'
+            };
+            setUser(managerSession);
+            localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(managerSession));
+            return { success: true, user: managerSession };
+          } else {
+            return { success: false, error: 'Incorrect Manager Password. Access Denied.' };
+          }
+        } else {
+          return { success: false, error: 'Manager ID/Email not found in Supabase manager table.' };
+        }
+      }
+
+      // Fallback check against website settings if Supabase is offline
       try {
         const storedSettings = localStorage.getItem('safa_website_settings');
         if (storedSettings) {
@@ -309,18 +338,12 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (e) {}
 
-      // Validate ID / Email match (allow manager, manager@safaelegance.com, or custom manager email)
       const isIdMatched =
         cleanInput === validManagerEmail ||
         cleanInput === 'manager@safaelegance.com' ||
-        cleanInput === 'manager@meetturban.com' ||
         cleanInput === 'manager';
 
-      // Validate Password match strictly (NO length >= 4 arbitrary fallback!)
-      const isPasswordMatched =
-        cleanPin === validManagerPassword ||
-        cleanPin === 'manager123' ||
-        cleanPin === 'admin123';
+      const isPasswordMatched = cleanPin === validManagerPassword;
 
       if (isIdMatched && isPasswordMatched) {
         const managerSession = {
